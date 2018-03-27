@@ -48,39 +48,49 @@ namespace spa_services
             */
 
             app.Map("/app1", app1 => {
-                var fileOptions = new StaticFileOptions {
-                    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "ClientApp/dist"))
-                };
+                var fileOptions = new StaticFileOptions();
+                if (!env.IsDevelopment()) {
+                    // this will error if ng prod build has not been run
+                    fileOptions.FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "ClientApp/dist"));
+                    app1.UseSpaStaticFiles(options: fileOptions);
+                }
 
-                app1.UseSpaStaticFiles(options: fileOptions);
                 app1.UseSpa(spa =>
                 {
                     spa.Options.SourcePath = "ClientApp";
                     spa.Options.DefaultPage = "/index.html";
-                    spa.Options.DefaultPageStaticFileOptions = fileOptions;
 
                     if (env.IsDevelopment())
                     {
                         spa.UseAngularCliServer(npmScript: "start:hosted");
                     }
+                    else
+                    {
+                        spa.Options.DefaultPageStaticFileOptions = fileOptions;
+                    }
                 });
             });
 
             app.Map("/app2", app2 => {
-                var fileOptions = new StaticFileOptions {
-                    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "ClientApp2/dist"))
-                };
+                var fileOptions = new StaticFileOptions();
+                if (!env.IsDevelopment()) {
+                    // this will error if ng prod build has not been run
+                    fileOptions.FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "ClientApp2/dist"));
+                    app2.UseSpaStaticFiles(options: fileOptions);
+                }
 
-                app2.UseSpaStaticFiles(options: fileOptions);
                 app2.UseSpa(spa =>
                 {
                     spa.Options.SourcePath = "ClientApp2";
                     spa.Options.DefaultPage = "/index.html";
-                    spa.Options.DefaultPageStaticFileOptions = fileOptions;
 
                     if (env.IsDevelopment())
                     {
                         spa.UseAngularCliServer(npmScript: "start:hosted");
+                    }
+                    else
+                    {
+                        spa.Options.DefaultPageStaticFileOptions = fileOptions;
                     }
                 });
             });
