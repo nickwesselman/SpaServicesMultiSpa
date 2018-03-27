@@ -1,8 +1,11 @@
+using System;
+using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 
 namespace spa_services
 {
@@ -18,13 +21,7 @@ namespace spa_services
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
 
-            // In production, the Angular files will be served from this directory
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "ClientApp/dist"; // needs to be per-app
-            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -34,32 +31,12 @@ namespace spa_services
             {
                 app.UseDeveloperExceptionPage();
             }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
-
-            app.UseStaticFiles();
-            app.UseSpaStaticFiles(); // wrapper for line above, can pass in options w/ FileProvider (custom for multiple SPAs)
-
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller}/{action=Index}/{id?}");
-            });
 
             // need to be able to spin up multiple SPAs
             // https://github.com/aspnet/JavaScriptServices/issues/1491
             // Running late could be issue for plugins until Bristol solves: https://github.com/aspnet/JavaScriptServices/blob/c8b337ebaa67c888901cbed4b3fd574a9113df15/src/Microsoft.AspNetCore.SpaServices.Extensions/SpaApplicationBuilderExtensions.cs#L21
             // More on middleware: https://docs.microsoft.com/en-us/aspnet/core/fundamentals/middleware/index?tabs=aspnetcore2x#use-run-and-map
-            app.UseSpa(spa =>
-            {
-                // To learn more about options for serving an Angular SPA from ASP.NET Core,
-                // see https://go.microsoft.com/fwlink/?linkid=864501
-
-                spa.Options.SourcePath = "ClientApp";
-
+            /*            
                 spa.UseSpaPrerendering(options =>
                 {
                     options.BootModulePath = $"{spa.Options.SourcePath}/dist-server/main.bundle.js";
@@ -68,11 +45,44 @@ namespace spa_services
                         : null;
                     options.ExcludeUrls = new[] { "/sockjs-node" };
                 });
+            */
 
-                if (env.IsDevelopment()) // why only in dev? what happens in prod?
+            app.Map("/app1", app1 => {
+                var fileOptions = new StaticFileOptions {
+                    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "ClientApp/dist"))
+                };
+
+                app1.UseSpaStaticFiles(options: fileOptions);
+                app1.UseSpa(spa =>
                 {
-                    spa.UseAngularCliServer(npmScript: "start");
-                }
+                    spa.Options.SourcePath = "ClientApp";
+                    spa.Options.DefaultPage = "/index.html";
+                    spa.Options.DefaultPageStaticFileOptions = fileOptions;
+
+                    if (env.IsDevelopment())
+                    {
+                        spa.UseAngularCliServer(npmScript: "start:hosted");
+                    }
+                });
+            });
+
+            app.Map("/app2", app2 => {
+                var fileOptions = new StaticFileOptions {
+                    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "ClientApp2/dist"))
+                };
+
+                app2.UseSpaStaticFiles(options: fileOptions);
+                app2.UseSpa(spa =>
+                {
+                    spa.Options.SourcePath = "ClientApp2";
+                    spa.Options.DefaultPage = "/index.html";
+                    spa.Options.DefaultPageStaticFileOptions = fileOptions;
+
+                    if (env.IsDevelopment())
+                    {
+                        spa.UseAngularCliServer(npmScript: "start:hosted");
+                    }
+                });
             });
         }
     }
