@@ -32,21 +32,6 @@ namespace spa_services
                 app.UseDeveloperExceptionPage();
             }
 
-            // need to be able to spin up multiple SPAs
-            // https://github.com/aspnet/JavaScriptServices/issues/1491
-            // Running late could be issue for plugins until Bristol solves: https://github.com/aspnet/JavaScriptServices/blob/c8b337ebaa67c888901cbed4b3fd574a9113df15/src/Microsoft.AspNetCore.SpaServices.Extensions/SpaApplicationBuilderExtensions.cs#L21
-            // More on middleware: https://docs.microsoft.com/en-us/aspnet/core/fundamentals/middleware/index?tabs=aspnetcore2x#use-run-and-map
-            /*            
-                spa.UseSpaPrerendering(options =>
-                {
-                    options.BootModulePath = $"{spa.Options.SourcePath}/dist-server/main.bundle.js";
-                    options.BootModuleBuilder = env.IsDevelopment()
-                        ? new AngularCliBuilder(npmScript: "build:ssr")
-                        : null;
-                    options.ExcludeUrls = new[] { "/sockjs-node" };
-                });
-            */
-
             app.Map("/app1", app1 => {
                 var fileOptions = new StaticFileOptions();
                 if (!env.IsDevelopment()) {
@@ -59,6 +44,15 @@ namespace spa_services
                 {
                     spa.Options.SourcePath = "ClientApp";
                     spa.Options.DefaultPage = "/index.html";
+
+                    spa.UseSpaPrerendering(options =>
+                    {
+                        options.BootModulePath = $"{spa.Options.SourcePath}/dist-server/main.bundle.js";
+                        options.BootModuleBuilder = env.IsDevelopment()
+                            ? new AngularCliBuilder(npmScript: "build:ssr")
+                            : null;
+                        options.ExcludeUrls = new[] { "/app1/sockjs-node" };
+                    });
 
                     if (env.IsDevelopment())
                     {
@@ -83,6 +77,15 @@ namespace spa_services
                 {
                     spa.Options.SourcePath = "ClientApp2";
                     spa.Options.DefaultPage = "/index.html";
+
+                    spa.UseSpaPrerendering(options =>
+                    {
+                        options.BootModulePath = $"{spa.Options.SourcePath}/dist-server/main.bundle.js";
+                        options.BootModuleBuilder = env.IsDevelopment()
+                            ? new AngularCliBuilder(npmScript: "build:ssr")
+                            : null;
+                        options.ExcludeUrls = new[] { "/app2/sockjs-node" };
+                    });
 
                     if (env.IsDevelopment())
                     {
