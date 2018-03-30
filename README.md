@@ -5,7 +5,7 @@ What is working:
 * Multi-SPA setup with independent Angular apps
 * Running both apps at separate paths in the .NET Core host in Development mode (proxying to Angular CLI server)
 * The same, in Production mode (running from a build in dist)
-* Hot reload in Development mode
+* Live reload in Development mode
 * SSR / prerender for both apps
 * Debugging SSR on an incrementing port
 
